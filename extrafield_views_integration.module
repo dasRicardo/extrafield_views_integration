@@ -1,0 +1,54 @@
+<?php
+/**
+ * Created by JetBrains PhpStorm.
+ * User: das_ricardo
+ * Date: 02.12.12
+ * Time: 13:22
+ */
+
+/**
+ * Implementzs hook_views_api().
+ * @return array
+ */
+function extrafield_views_integration_views_api() {
+  return array(
+    'api' => '3.0',
+    // (optional) Ordner der $module.views.inc
+    'path' => drupal_get_path('module', 'extrafield_views_integration') . '/views',
+  );
+}
+
+/**
+ * Helper function to get all registred extra fields with a callback function that exists.
+ * @return array
+ */
+function _extrafield_views_integration_getExtraFields() {
+  // Get an array with all modules that Implements hook_field_extra_fields.
+  $field_extra_hook_modules = module_implements('field_extra_fields');
+  $extra_fields = array();
+  foreach($field_extra_hook_modules as $module) {
+    //Get the entity type and bundle for that the extrafield will be registered.
+    $field_extra_hooks = module_invoke($module, 'field_extra_fields');
+    $entity_type = key($field_extra_hooks);
+    foreach($field_extra_hooks[$entity_type] as $bundle => $categories) {
+      foreach($categories as $category_type => $category) {
+        //Check if the extrafield type is display, only display extrafields will be available in views
+        if($category_type == 'display') {
+          foreach($category as $extra_field_id => $extra_field) {
+            //Check if the extrafield array have the key callback. Check also if the callback function exists.
+            if(isset($extra_field['callback']) && !empty($extra_field['callback']) && function_exists($extra_field['callback'])) {
+              $extra_fields[$entity_type . '_' . $bundle . '_' . $extra_field_id] = array(
+                'entity_type' => $entity_type,
+                'bundle' => $bundle,
+                'label' => $extra_field['label'],
+                'description' => $extra_field['description'],
+                'callback' => $extra_field['callback'],
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+  return $extra_fields;
+}

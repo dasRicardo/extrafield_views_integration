@@ -1,0 +1,7 @@
+name = Extrafield Views Integration
+description = Integrate Drupal Core extrafields from type display in views.
+core = 7.x
+
+dependencies[] = views
+dependencies[] = entity
+files[] = views/handlers/field/extrafield_views_integration_handler_field_extrafield.inc
